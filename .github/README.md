@@ -1,48 +1,86 @@
-<h1><img alt="Baileys logo" src="https://raw.githubusercontent.com/WhiskeySockets/Baileys/refs/heads/master/Media/logo.png" height="75"/></h1>
+<h1 align="center">
+  <img alt="ZeroneXCode Baileys" src="https://raw.githubusercontent.com/XzeroOffc/baileys/refs/heads/master/Media/logo.png" height="75">
+</h1>
 
+<h1 align="center">ZeroneXCode Baileys</h1>
 
-> [!CAUTION]
-> NOTICE OF BREAKING CHANGE.
->
-> As of 7.0.0, multiple breaking changes were introduced into the library.
->
-> Please check out https://whiskey.so/migrate-latest for more information.
+<div align="center">
+A ZeroneXCode-maintained fork of Baileys, a WebSocket-based TypeScript library for interacting with WhatsApp Web.
+</div>
 
-Baileys is a WebSockets-based TypeScript library for interacting with the WhatsApp Web API.
+## Package
 
-Join the WhiskeySockets community via the link: https://whiskey.so/discord
+```bash
+npm install @zeronexcode/baileys
+```
 
-# Usage & Guide
+or:
 
-> [!IMPORTANT]
-> The new guide is a work in progress. Expect missing pages/content. [Report missing or incorrect content.](https://github.com/WhiskeySockets/baileys.wiki-site/issues/new)
->
-> **You can still access the old guide here:** [README.md](https://github.com/WhiskeySockets/Baileys/tree/master/README.md), or the [NPM homepage](https://npmjs.com/package/baileys).
+```bash
+yarn add @zeronexcode/baileys
+```
 
-The new guide is posted at https://baileys.wiki .
+Latest GitHub version:
 
-# Get Support
+```bash
+npm install github:XzeroOffc/baileys
+```
 
-If you'd like business to enterprise-level support from Rajeh, the current maintainer of Baileys, you can book a video chat. Book a 1 hour time slot by contacting him on Discord or pre-ordering [here](https://purpshell.dev/book). The earlier you pre-order the better, as his time slots usually fill up very quickly. He offers immense value per hour and will answer all your questions before the time runs out.
+Requires **Node.js 20 or newer**.
 
-If you are a business, we encourage you to contribute back to the high development costs of the project and to feed the maintainers who dump tens of hours a week on this. You can do so by booking meetings or sponsoring below. All support, even in bona fide / contribution hours, is welcome by businesses of all sizes. This is not condoning or endorsing businesses to use the library. See the Disclaimer below.
+## Basic Usage
 
-# Sponsor
+```ts
+import makeWASocket, {
+  Browsers,
+  useMultiFileAuthState
+} from '@zeronexcode/baileys'
 
-If you'd like to financially support this project, you can do so by supporting the current maintainer [here](https://purpshell.dev/sponsor).
+const { state, saveCreds } = await useMultiFileAuthState('auth_info_baileys')
 
-# Disclaimer
-> [!CAUTION]
-> This project is not affiliated, associated, authorized, endorsed by, or in any way officially connected with WhatsApp or any of its subsidiaries or its affiliates.
-> The official WhatsApp website can be found at whatsapp.com. "WhatsApp" as well as related names, marks, emblems and images are registered trademarks of their respective owners.
->
-> The maintainers of Baileys do not in any way condone the use of this application in practices that violate the Terms of Service of WhatsApp. The maintainers of this application call upon the personal responsibility of its users to use this application in a fair way, as it is intended to be used.
-> Use at your own discretion. Do not spam people with this. We discourage any stalkerware, bulk or automated messaging usage.
+const sock = makeWASocket({
+  auth: state,
+  browser: Browsers.ubuntu('ZeroneXCode')
+})
 
-# License
+sock.ev.on('creds.update', saveCreds)
+```
+
+For the complete Baileys API and usage guide, see the upstream documentation:
+https://baileys.wiki/docs/intro/
+
+## Repository
+
+- ZeroneXCode fork: https://github.com/XzeroOffc/baileys
+- Upstream project: https://github.com/WhiskeySockets/Baileys
+- npm package: `@zeronexcode/baileys`
+
+## Upstream Attribution
+
+This project is derived from the open-source **Baileys** project maintained by
+**WhiskeySockets** and its contributors.
+
+ZeroneXCode does not claim authorship of the original Baileys codebase.
+Original copyright notices and the MIT License are preserved.
+
+Changes made in this fork include package branding, distribution configuration,
+release workflow changes, and future ZeroneXCode-specific maintenance.
+
+## Disclaimer
+
+This project is not affiliated with, authorized by, endorsed by, or officially
+connected with WhatsApp or Meta.
+
+Use this library responsibly and in accordance with applicable terms, policies,
+and laws. Do not use it for spam, stalkerware, abusive automation, or other
+harmful activity.
+
+## License
+
 Copyright (c) 2025 Rajeh Taher/WhiskeySockets
 
 Licensed under the MIT License:
+
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
 in the Software without restriction, including without limitation the rights
@@ -60,5 +98,3 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
-
-Thus, the maintainers of the project can't be held liable for any potential misuse of this project.
