@@ -1,7 +1,7 @@
 {
   "name": "@zeronexcode/baileys",
   "type": "module",
-  "version": "7.0.0-zeronex.5",
+  "version": "7.0.0-zeronex.6",
   "description": "ZeroneXCode fork of Baileys, a WebSockets library for interacting with WhatsApp Web",
   "keywords": [
     "whatsapp",
