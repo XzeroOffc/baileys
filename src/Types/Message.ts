@@ -171,6 +171,21 @@ type RequestPhoneNumber = {
 	requestPhoneNumber: boolean
 }
 
+export type InteractiveSingleSelectButton = {
+	name: 'single_select'
+	buttonParamsJson: string
+}
+
+export type InteractiveMessageContent = {
+	interactiveMessage: {
+		title?: string
+		header?: string
+		body?: string
+		footer?: string
+		buttons: InteractiveSingleSelectButton[]
+	}
+}
+
 export type AnyMediaMessageContent = (
 	| ({
 			image: WAMediaUpload
@@ -228,22 +243,6 @@ export type GroupInviteInfo = {
 export type WASendableProduct = Omit<proto.Message.ProductMessage.IProductSnapshot, 'productImage'> & {
 	productImage: WAMediaUpload
 }
-
-
-export type InteractiveButton = {
-	name: 'single_select'
-	buttonParamsJson: string
-}
-
-export type InteractiveMessageContent = {
-	interactiveMessage: {
-		title?: string
-		header?: string
-		body?: string
-		footer?: string
-		buttons: InteractiveButton[]
-	}
-} & Contextable
 
 export type AnyRegularMessageContent = (
 	| ({
