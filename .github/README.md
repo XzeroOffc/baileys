@@ -308,6 +308,121 @@ await sock.sendMessage(jid, {
 
 ---
 
+## Interactive Message (Single Select)
+
+ZeroneXCode Baileys adds high-level support for WhatsApp Native Flow interactive messages using `single_select`.
+
+Basic example:
+
+```ts
+await sock.sendMessage(jid, {
+  interactiveMessage: {
+    title: 'ZeroneXCode Bot',
+    header: '🍃 Main Menu',
+    footer: 'Powered by ZeroneXCode',
+    buttons: [
+      {
+        name: 'single_select',
+        buttonParamsJson: JSON.stringify({
+          title: '🍃 Menu Utama',
+          sections: [
+            {
+              title: 'Pilih Menu',
+              rows: [
+                {
+                  title: 'Ping',
+                  description: 'Cek speed bot',
+                  id: '.ping'
+                },
+                {
+                  title: 'Owner',
+                  description: 'Lihat owner bot',
+                  id: '.owner'
+                }
+              ]
+            }
+          ]
+        })
+      }
+    ]
+  }
+})
+```
+
+With quoted message:
+
+```ts
+await sock.sendMessage(
+  jid,
+  {
+    interactiveMessage: {
+      title: 'ZeroneXCode Bot',
+      header: '🍃 Main Menu',
+      footer: 'Powered by ZeroneXCode',
+      buttons: [
+        {
+          name: 'single_select',
+          buttonParamsJson: JSON.stringify({
+            title: '🍃 Menu Utama',
+            sections: [
+              {
+                title: 'Pilih Menu',
+                rows: [
+                  {
+                    title: 'Ping',
+                    description: 'Cek speed bot',
+                    id: '.ping'
+                  }
+                ]
+              }
+            ]
+          })
+        }
+      ]
+    }
+  },
+  { quoted: msg }
+)
+```
+
+Interactive messages can also be wrapped as view-once messages:
+
+```ts
+await sock.sendMessage(jid, {
+  viewOnce: true,
+  interactiveMessage: {
+    title: 'ZeroneXCode Bot',
+    header: '🍃 Main Menu',
+    footer: 'Powered by ZeroneXCode',
+    buttons: [
+      {
+        name: 'single_select',
+        buttonParamsJson: JSON.stringify({
+          title: 'Pilih Menu',
+          sections: [
+            {
+              title: 'Main',
+              rows: [
+                {
+                  title: 'Ping',
+                  description: 'Cek speed bot',
+                  id: '.ping'
+                }
+              ]
+            }
+          ]
+        })
+      }
+    ]
+  }
+})
+```
+
+> [!NOTE]
+> The current ZeroneXCode high-level interactive helper intentionally supports `single_select` only. Other Native Flow button types are not enabled by this helper yet.
+
+---
+
 # Presence
 
 ```ts
