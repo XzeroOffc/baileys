@@ -229,6 +229,22 @@ export type WASendableProduct = Omit<proto.Message.ProductMessage.IProductSnapsh
 	productImage: WAMediaUpload
 }
 
+
+export type InteractiveButton = {
+	name: 'single_select'
+	buttonParamsJson: string
+}
+
+export type InteractiveMessageContent = {
+	interactiveMessage: {
+		title?: string
+		header?: string
+		body?: string
+		footer?: string
+		buttons: InteractiveButton[]
+	}
+} & Contextable
+
 export type AnyRegularMessageContent = (
 	| ({
 			text: string
@@ -237,6 +253,7 @@ export type AnyRegularMessageContent = (
 			Contextable &
 			Editable)
 	| AnyMediaMessageContent
+	| InteractiveMessageContent
 	| { event: EventMessageOptions }
 	| ({
 			poll: PollMessageOptions
