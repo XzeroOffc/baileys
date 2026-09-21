@@ -8,6 +8,7 @@ on:
 
 permissions:
   contents: read
+  packages: read
 
 jobs:
   e2e:
@@ -19,7 +20,7 @@ jobs:
         image: ghcr.io/whiskeysockets-devtools/bartender:latest
         credentials:
           username: ${{ github.actor }}
-          password: ${{ secrets.BARTENDER_GHCR_TOKEN }}
+          password: ${{ secrets.BARTENDER_GHCR_TOKEN || github.token }}
         ports:
           - 8080:8080
         env:
@@ -29,20 +30,18 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
-        with:
-          ref: ${{ github.event.pull_request.head.sha || github.sha }}
 
-      - name: Setup Node.js and Corepack
+      - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: 20.x
 
-      - name: Enable Corepack and Set Yarn Version
+      - name: Enable Corepack and Yarn
         run: |
           corepack enable
-          corepack prepare yarn@4.x --activate
+          corepack prepare yarn@4.9.2 --activate
 
-      - name: Restore Yarn Cache
+      - name: Restore Yarn cache
         uses: actions/cache@v4
         with:
           path: .yarn/cache
@@ -51,7 +50,7 @@ jobs:
             ${{ runner.os }}-yarn-
 
       - name: Install dependencies
-        run: yarn install --immutable
+        run: yarn install --no-immutable
 
       - name: Wait for mock server
         run: |
