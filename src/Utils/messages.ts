@@ -909,7 +909,7 @@ export const getDevice = (id: string) =>
 					? 'desktop'
 					: 'unknown'
 
-/** Upserts a receipt in the message */
+/** Upserts a receipt in a message */
 export const updateMessageWithReceipt = (msg: Pick<WAMessage, 'userReceipt'>, receipt: MessageUserReceipt) => {
 	msg.userReceipt = msg.userReceipt || []
 	const recp = msg.userReceipt.find(m => m.userJid === receipt.userJid)
