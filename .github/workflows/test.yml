@@ -13,21 +13,20 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
-      - name: Setup Node.js and Corepack
-        uses: actions/setup-node@v3
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
         with:
           node-version: 20.x
 
-      - name: Enable Corepack and Set Yarn Version
+      - name: Enable Corepack and Yarn
         run: |
           corepack enable
-          corepack prepare yarn@4.x --activate
+          corepack prepare yarn@4.9.2 --activate
 
-      - name: Restore Yarn Cache
-        uses: actions/cache@v3
-        id: yarn-cache
+      - name: Restore Yarn cache
+        uses: actions/cache@v4
         with:
           path: .yarn/cache
           key: ${{ runner.os }}-yarn-${{ hashFiles('**/yarn.lock') }}
@@ -35,7 +34,7 @@ jobs:
             ${{ runner.os }}-yarn-
 
       - name: Install dependencies
-        run: yarn install --immutable
+        run: yarn install --no-immutable
 
       - name: Run tests
         run: yarn test
