@@ -607,7 +607,7 @@ export const generateWAMessageContent = async (
 			}
 		}
 
-		m.interactiveMessage = proto.Message.InteractiveMessage.create({
+		const interactiveMessage = proto.Message.InteractiveMessage.create({
 			header: proto.Message.InteractiveMessage.Header.create({
 				title: interactive.header || interactive.title || '',
 				hasMediaAttachment: false
@@ -624,6 +624,14 @@ export const generateWAMessageContent = async (
 				messageVersion: 1
 			})
 		})
+
+		m = {
+			viewOnceMessage: {
+				message: {
+					interactiveMessage
+				}
+			}
+		}
 	} else if (hasNonNullishProperty(message, 'sharePhoneNumber')) {
 		m.protocolMessage = {
 			type: proto.Message.ProtocolMessage.Type.SHARE_PHONE_NUMBER
@@ -644,7 +652,7 @@ export const generateWAMessageContent = async (
 		m = await prepareWAMessageMedia(message, options)
 	}
 
-	if (hasOptionalProperty(message, 'viewOnce') && !!message.viewOnce) {
+	if (hasOptionalProperty(message, 'viewOnce') && !!message.viewOnce && !m.viewOnceMessage) {
 		m = { viewOnceMessage: { message: m } }
 	}
 
