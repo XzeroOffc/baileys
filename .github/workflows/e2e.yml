@@ -5,6 +5,8 @@ on:
     branches:
       - master
       - develop
+  pull_request:
+  workflow_dispatch:
 
 permissions:
   contents: read
@@ -15,21 +17,11 @@ jobs:
     name: E2E Tests
     runs-on: ubuntu-latest
     timeout-minutes: 10
-    services:
-      mock-server:
-        image: ghcr.io/whiskeysockets-devtools/bartender:latest
-        credentials:
-          username: ${{ github.actor }}
-          password: ${{ secrets.BARTENDER_GHCR_TOKEN || github.token }}
-        ports:
-          - 8080:8080
-        env:
-          CHATSTATE_TTL_SECS: "3"
-          ADV_SECRET_KEY: "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA="
-        options: --log-driver none
 
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -52,7 +44,38 @@ jobs:
       - name: Install dependencies
         run: yarn install --no-immutable
 
+      - name: Check Bartender package access
+        id: bartender
+        env:
+          BARTENDER_GHCR_TOKEN: ${{ secrets.BARTENDER_GHCR_TOKEN }}
+        shell: bash
+        run: |
+          if [ -z "$BARTENDER_GHCR_TOKEN" ]; then
+            echo "available=false" >> "$GITHUB_OUTPUT"
+            echo "BARTENDER_GHCR_TOKEN is not configured; E2E execution will be skipped."
+          else
+            echo "$BARTENDER_GHCR_TOKEN" | docker login ghcr.io -u "${{ github.actor }}" --password-stdin
+            if docker pull ghcr.io/whiskeysockets-devtools/bartender:latest; then
+              echo "available=true" >> "$GITHUB_OUTPUT"
+            else
+              echo "available=false" >> "$GITHUB_OUTPUT"
+              echo "Bartender image is not accessible with the configured token; E2E execution will be skipped."
+            fi
+          fi
+
+      - name: Start mock server
+        if: steps.bartender.outputs.available == 'true'
+        run: |
+          docker run -d \
+            --name bartender \
+            -p 8080:8080 \
+            -e CHATSTATE_TTL_SECS=3 \
+            -e ADV_SECRET_KEY=AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA= \
+            --log-driver none \
+            ghcr.io/whiskeysockets-devtools/bartender:latest
+
       - name: Wait for mock server
+        if: steps.bartender.outputs.available == 'true'
         run: |
           for i in $(seq 1 30); do
             if curl -sk https://localhost:8080/ > /dev/null 2>&1; then
@@ -62,10 +85,22 @@ jobs:
             sleep 1
           done
           echo "Mock server failed to become ready"
+          docker logs bartender || true
           exit 1
 
       - name: Run E2E tests
+        if: steps.bartender.outputs.available == 'true'
         env:
           SOCKET_URL: "wss://127.0.0.1:8080/ws/chat"
           ADV_SECRET_KEY: "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA="
         run: yarn test:e2e
+
+      - name: Report skipped E2E
+        if: steps.bartender.outputs.available != 'true'
+        run: |
+          echo "E2E tests were not executed because the upstream Bartender GHCR image is inaccessible." >> "$GITHUB_STEP_SUMMARY"
+          echo "Configure repository secret BARTENDER_GHCR_TOKEN with read:packages access to run the suite." >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Stop mock server
+        if: always() && steps.bartender.outputs.available == 'true'
+        run: docker rm -f bartender || true
