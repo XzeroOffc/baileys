@@ -35,5 +35,11 @@ jobs:
       - name: Install packages
         run: yarn install --no-immutable
 
+      - name: Apply autofixable lint rules
+        run: yarn lint:fix
+
+      - name: Check linting
+        run: yarn lint
+
       - name: Check linting
         run: yarn lint
