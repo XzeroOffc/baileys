@@ -1260,228 +1260,228 @@ export const makeMessagesSocket = (config: SocketConfig) => {
 	})
 
 
-\tconst sendRawMessageContent = async (
-\t\tjid: string,
-\t\tmessage: proto.IMessage,
-\t\tquoted?: WAMessage,
-\t\toptions: MiscMessageGenerationOptions = {}
-\t) => {
-\t\tconst userJid = authState.creds.me!.id
-\t\tconst fullMsg = generateWAMessageFromContent(jid, message, {
-\t\t\tuserJid,
-\t\t\tmessageId: generateMessageIDV2(sock.user?.id),
-\t\t\tquoted,
-\t\t\t...options
-\t\t})
-\t\tawait relayMessage(jid, fullMsg.message!, {
-\t\t\tmessageId: fullMsg.key.id!,
-\t\t\tuseCachedGroupMetadata: options.useCachedGroupMetadata,
-\t\t\tstatusJidList: options.statusJidList
-\t\t})
-\t\treturn fullMsg
-\t}
+	const sendRawMessageContent = async (
+		jid: string,
+		message: proto.IMessage,
+		quoted?: WAMessage,
+		options: MiscMessageGenerationOptions = {}
+	) => {
+		const userJid = authState.creds.me!.id
+		const fullMsg = generateWAMessageFromContent(jid, message, {
+			userJid,
+			messageId: generateMessageIDV2(sock.user?.id),
+			quoted,
+			...options
+		})
+		await relayMessage(jid, fullMsg.message!, {
+			messageId: fullMsg.key.id!,
+			useCachedGroupMetadata: options.useCachedGroupMetadata,
+			statusJidList: options.statusJidList
+		})
+		return fullMsg
+	}
 
-\ttype RichMessageOptions = {
-\t\theaderText?: string
-\t\ttext?: string
-\t\tfooter?: string
-\t\ttitle?: string
-\t\tlanguage?: string
-\t\tbotJid?: string
-\t\tbotName?: string
-\t\tcreatorName?: string
-\t\tforwardingScore?: number
-\t}
+	type RichMessageOptions = {
+		headerText?: string
+		text?: string
+		footer?: string
+		title?: string
+		language?: string
+		botJid?: string
+		botName?: string
+		creatorName?: string
+		forwardingScore?: number
+	}
 
-\tconst makeRichContextInfo = (options: RichMessageOptions = {}): proto.IContextInfo => ({
-\t\tforwardingScore: options.forwardingScore ?? 3,
-\t\tisForwarded: true,
-\t\tforwardedAiBotMessageInfo: {
-\t\t\tbotName: options.botName || 'ZeroneXCode AI',
-\t\t\tbotJid: options.botJid || '867051314767696@bot',
-\t\t\tcreatorName: options.creatorName || 'ZeroneXCode'
-\t\t},
-\t\tbotMessageSharingInfo: { forwardScore: options.forwardingScore ?? 3 }
-\t})
+	const makeRichContextInfo = (options: RichMessageOptions = {}): proto.IContextInfo => ({
+		forwardingScore: options.forwardingScore ?? 3,
+		isForwarded: true,
+		forwardedAiBotMessageInfo: {
+			botName: options.botName || 'ZeroneXCode AI',
+			botJid: options.botJid || '867051314767696@bot',
+			creatorName: options.creatorName || 'ZeroneXCode'
+		},
+		botMessageSharingInfo: { forwardScore: options.forwardingScore ?? 3 }
+	})
 
-\tconst textSubMessage = (text: string) => ({ messageType: 2, messageText: text })
+	const textSubMessage = (text: string) => ({ messageType: 2, messageText: text })
 
-\tconst sendRichMessage = async (
-\t\tjid: string,
-\t\tsubmessages: any[],
-\t\tquoted?: WAMessage,
-\t\toptions: RichMessageOptions = {}
-\t) => {
-\t\tif (!Array.isArray(submessages) || submessages.length === 0) {
-\t\t\tthrow new Boom('sendRichMessage requires at least one submessage', { statusCode: 400 })
-\t\t}
-\t\tconst richResponseMessage: any = {
-\t\t\tmessageType: 1,
-\t\t\tsubmessages,
-\t\t\tcontextInfo: makeRichContextInfo(options)
-\t\t}
-\t\treturn sendRawMessageContent(
-\t\t\tjid,
-\t\t\t{ botForwardedMessage: { message: { richResponseMessage } } },
-\t\t\tquoted
-\t\t)
-\t}
+	const sendRichMessage = async (
+		jid: string,
+		submessages: any[],
+		quoted?: WAMessage,
+		options: RichMessageOptions = {}
+	) => {
+		if (!Array.isArray(submessages) || submessages.length === 0) {
+			throw new Boom('sendRichMessage requires at least one submessage', { statusCode: 400 })
+		}
+		const richResponseMessage: any = {
+			messageType: 1,
+			submessages,
+			contextInfo: makeRichContextInfo(options)
+		}
+		return sendRawMessageContent(
+			jid,
+			{ botForwardedMessage: { message: { richResponseMessage } } },
+			quoted
+		)
+	}
 
-\tconst sendTable = async (
-\t\tjid: string,
-\t\ttitle: string,
-\t\theaders: string[],
-\t\trows: string[][],
-\t\tquoted?: WAMessage,
-\t\toptions: RichMessageOptions = {}
-\t) => {
-\t\tconst submessages: any[] = []
-\t\tif (options.headerText) submessages.push(textSubMessage(options.headerText))
-\t\tsubmessages.push({
-\t\t\tmessageType: 4,
-\t\t\ttableMetadata: {
-\t\t\t\ttitle,
-\t\t\t\trows: [
-\t\t\t\t\t{ items: headers.map(String), isHeading: true },
-\t\t\t\t\t...rows.map(row => ({ items: row.map(String), isHeading: false }))
-\t\t\t\t]
-\t\t\t}
-\t\t})
-\t\tif (options.footer) submessages.push(textSubMessage(options.footer))
-\t\treturn sendRichMessage(jid, submessages, quoted, options)
-\t}
+	const sendTable = async (
+		jid: string,
+		title: string,
+		headers: string[],
+		rows: string[][],
+		quoted?: WAMessage,
+		options: RichMessageOptions = {}
+	) => {
+		const submessages: any[] = []
+		if (options.headerText) submessages.push(textSubMessage(options.headerText))
+		submessages.push({
+			messageType: 4,
+			tableMetadata: {
+				title,
+				rows: [
+					{ items: headers.map(String), isHeading: true },
+					...rows.map(row => ({ items: row.map(String), isHeading: false }))
+				]
+			}
+		})
+		if (options.footer) submessages.push(textSubMessage(options.footer))
+		return sendRichMessage(jid, submessages, quoted, options)
+	}
 
-\tconst sendList = async (
-\t\tjid: string,
-\t\ttitle: string,
-\t\trows: string[][],
-\t\tquoted?: WAMessage,
-\t\toptions: RichMessageOptions = {}
-\t) => {
-\t\tconst width = Math.max(2, ...rows.map(row => row.length))
-\t\tconst headers = Array.from({ length: width }, (_, i) => (i === 0 ? 'Item' : i === 1 ? 'Value' : `Value ${i}`))
-\t\treturn sendTable(jid, title, headers, rows, quoted, options)
-\t}
+	const sendList = async (
+		jid: string,
+		title: string,
+		rows: string[][],
+		quoted?: WAMessage,
+		options: RichMessageOptions = {}
+	) => {
+		const width = Math.max(2, ...rows.map(row => row.length))
+		const headers = Array.from({ length: width }, (_, i) => (i === 0 ? 'Item' : i === 1 ? 'Value' : `Value ${i}`))
+		return sendTable(jid, title, headers, rows, quoted, options)
+	}
 
-\tconst sendCodeBlock = async (
-\t\tjid: string,
-\t\tcode: string,
-\t\tquoted?: WAMessage,
-\t\toptions: RichMessageOptions = {}
-\t) => {
-\t\tconst submessages: any[] = []
-\t\tif (options.headerText || options.title) submessages.push(textSubMessage(options.headerText || options.title || ''))
-\t\tsubmessages.push({
-\t\t\tmessageType: 5,
-\t\t\tcodeMetadata: {
-\t\t\t\tcodeLanguage: options.language || 'javascript',
-\t\t\t\tcodeBlocks: [{ highlightType: 0, codeContent: String(code) }]
-\t\t\t}
-\t\t})
-\t\tif (options.footer) submessages.push(textSubMessage(options.footer))
-\t\treturn sendRichMessage(jid, submessages, quoted, options)
-\t}
+	const sendCodeBlock = async (
+		jid: string,
+		code: string,
+		quoted?: WAMessage,
+		options: RichMessageOptions = {}
+	) => {
+		const submessages: any[] = []
+		if (options.headerText || options.title) submessages.push(textSubMessage(options.headerText || options.title || ''))
+		submessages.push({
+			messageType: 5,
+			codeMetadata: {
+				codeLanguage: options.language || 'javascript',
+				codeBlocks: [{ highlightType: 0, codeContent: String(code) }]
+			}
+		})
+		if (options.footer) submessages.push(textSubMessage(options.footer))
+		return sendRichMessage(jid, submessages, quoted, options)
+	}
 
-\tconst parseDelimitedRow = (value: string) => value.split(/\\s*[|,]\\s*/).filter(Boolean)
+	const parseDelimitedRow = (value: string) => value.split(/\s*[|,]\s*/).filter(Boolean)
 
-\tconst sendTableV2 = async (
-\t\tjid: string,
-\t\ttable: string[],
-\t\tquoted?: WAMessage,
-\t\toptions: RichMessageOptions = {}
-\t) => {
-\t\tif (!Array.isArray(table) || table.length < 2) {
-\t\t\tthrow new Boom('sendTableV2 requires [title, header, ...rows]', { statusCode: 400 })
-\t\t}
-\t\tconst title = options.title || table[0] || ''
-\t\tconst headers = parseDelimitedRow(table[1] || '')
-\t\tconst rows = table.slice(2).flatMap(value => String(value).split(';;')).filter(Boolean).map(parseDelimitedRow)
-\t\tconst submessages: any[] = []
-\t\tif (options.headerText) submessages.push(textSubMessage(options.headerText))
-\t\tif (options.text) submessages.push(textSubMessage(options.text))
-\t\tsubmessages.push({
-\t\t\tmessageType: 4,
-\t\t\ttableMetadata: {
-\t\t\t\ttitle,
-\t\t\t\trows: [{ items: headers, isHeading: true }, ...rows.map(row => ({ items: row, isHeading: false }))]
-\t\t\t}
-\t\t})
-\t\tif (options.footer) submessages.push(textSubMessage(options.footer))
-\t\tconst richResponseMessage: any = {
-\t\t\tmessageType: 1,
-\t\t\tsubmessages,
-\t\t\tunifiedResponse: {
-\t\t\t\tdata: Buffer.from(JSON.stringify({
-\t\t\t\t\tsections: [
-\t\t\t\t\t\t...(options.text ? [{ typename: 'GenAIMarkdownTextUXPrimitive', text: options.text }] : []),
-\t\t\t\t\t\t{ typename: 'GenATableUXPrimitive', title, headers, rows }
-\t\t\t\t\t]
-\t\t\t\t}))
-\t\t\t},
-\t\t\tcontextInfo: makeRichContextInfo(options)
-\t\t}
-\t\treturn sendRawMessageContent(jid, { botForwardedMessage: { message: { richResponseMessage } } }, quoted)
-\t}
+	const sendTableV2 = async (
+		jid: string,
+		table: string[],
+		quoted?: WAMessage,
+		options: RichMessageOptions = {}
+	) => {
+		if (!Array.isArray(table) || table.length < 2) {
+			throw new Boom('sendTableV2 requires [title, header, ...rows]', { statusCode: 400 })
+		}
+		const title = options.title || table[0] || ''
+		const headers = parseDelimitedRow(table[1] || '')
+		const rows = table.slice(2).flatMap(value => String(value).split(';;')).filter(Boolean).map(parseDelimitedRow)
+		const submessages: any[] = []
+		if (options.headerText) submessages.push(textSubMessage(options.headerText))
+		if (options.text) submessages.push(textSubMessage(options.text))
+		submessages.push({
+			messageType: 4,
+			tableMetadata: {
+				title,
+				rows: [{ items: headers, isHeading: true }, ...rows.map(row => ({ items: row, isHeading: false }))]
+			}
+		})
+		if (options.footer) submessages.push(textSubMessage(options.footer))
+		const richResponseMessage: any = {
+			messageType: 1,
+			submessages,
+			unifiedResponse: {
+				data: Buffer.from(JSON.stringify({
+					sections: [
+						...(options.text ? [{ typename: 'GenAIMarkdownTextUXPrimitive', text: options.text }] : []),
+						{ typename: 'GenATableUXPrimitive', title, headers, rows }
+					]
+				}))
+			},
+			contextInfo: makeRichContextInfo(options)
+		}
+		return sendRawMessageContent(jid, { botForwardedMessage: { message: { richResponseMessage } } }, quoted)
+	}
 
-\tconst sendCodeBlockV2 = async (
-\t\tjid: string,
-\t\tcode: string,
-\t\tquoted?: WAMessage,
-\t\toptions: RichMessageOptions = {}
-\t) => {
-\t\tconst language = options.language || 'javascript'
-\t\tconst submessages: any[] = []
-\t\tif (options.headerText || options.title) submessages.push(textSubMessage(options.headerText || options.title || ''))
-\t\tif (options.text) submessages.push(textSubMessage(options.text))
-\t\tsubmessages.push({ messageType: 5, codeMetadata: { codeLanguage: language, codeBlocks: [{ highlightType: 0, codeContent: String(code) }] } })
-\t\tif (options.footer) submessages.push(textSubMessage(options.footer))
-\t\tconst richResponseMessage: any = {
-\t\t\tmessageType: 1,
-\t\t\tsubmessages,
-\t\t\tunifiedResponse: {
-\t\t\t\tdata: Buffer.from(JSON.stringify({
-\t\t\t\t\tsections: [
-\t\t\t\t\t\t...(options.text ? [{ typename: 'GenAIMarkdownTextUXPrimitive', text: options.text }] : []),
-\t\t\t\t\t\t{ typename: 'GenAICodeUXPrimitive', language, title: options.title, code: String(code) }
-\t\t\t\t\t]
-\t\t\t\t}))
-\t\t\t},
-\t\t\tcontextInfo: makeRichContextInfo(options)
-\t\t}
-\t\treturn sendRawMessageContent(jid, { botForwardedMessage: { message: { richResponseMessage } } }, quoted)
-\t}
+	const sendCodeBlockV2 = async (
+		jid: string,
+		code: string,
+		quoted?: WAMessage,
+		options: RichMessageOptions = {}
+	) => {
+		const language = options.language || 'javascript'
+		const submessages: any[] = []
+		if (options.headerText || options.title) submessages.push(textSubMessage(options.headerText || options.title || ''))
+		if (options.text) submessages.push(textSubMessage(options.text))
+		submessages.push({ messageType: 5, codeMetadata: { codeLanguage: language, codeBlocks: [{ highlightType: 0, codeContent: String(code) }] } })
+		if (options.footer) submessages.push(textSubMessage(options.footer))
+		const richResponseMessage: any = {
+			messageType: 1,
+			submessages,
+			unifiedResponse: {
+				data: Buffer.from(JSON.stringify({
+					sections: [
+						...(options.text ? [{ typename: 'GenAIMarkdownTextUXPrimitive', text: options.text }] : []),
+						{ typename: 'GenAICodeUXPrimitive', language, title: options.title, code: String(code) }
+					]
+				}))
+			},
+			contextInfo: makeRichContextInfo(options)
+		}
+		return sendRawMessageContent(jid, { botForwardedMessage: { message: { richResponseMessage } } }, quoted)
+	}
 
-\tconst expandInlineLinks = (text: string, links: Array<string | { url: string }>) =>
-\t\ttext.replace(/\\{\\{IE_(\\d+)\\}\\}([\\s\\S]*?)\\{\\{\\/IE_\\1\\}\\}/g, (_match, index, label) => {
-\t\t\tconst link = links[Number(index)]
-\t\t\tconst url = typeof link === 'string' ? link : link?.url
-\t\t\treturn url ? `${label} (${url})` : label
-\t\t})
+	const expandInlineLinks = (text: string, links: Array<string | { url: string }>) =>
+		text.replace(/\{\{IE_(\d+)\}\}([\s\S]*?)\{\{\/IE_\1\}\}/g, (_match, index, label) => {
+			const link = links[Number(index)]
+			const url = typeof link === 'string' ? link : link?.url
+			return url ? `${label} (${url})` : label
+		})
 
-\tconst sendLink = async (
-\t\tjid: string,
-\t\ttext: string,
-\t\tlinks: string[],
-\t\tquoted?: WAMessage,
-\t\toptions: RichMessageOptions = {}
-\t) => sendRichMessage(
-\t\tjid,
-\t\t[
-\t\t\t...(options.headerText ? [textSubMessage(options.headerText)] : []),
-\t\t\ttextSubMessage(expandInlineLinks(text, links)),
-\t\t\t...(options.footer ? [textSubMessage(options.footer)] : [])
-\t\t],
-\t\tquoted,
-\t\toptions
-\t)
+	const sendLink = async (
+		jid: string,
+		text: string,
+		links: string[],
+		quoted?: WAMessage,
+		options: RichMessageOptions = {}
+	) => sendRichMessage(
+		jid,
+		[
+			...(options.headerText ? [textSubMessage(options.headerText)] : []),
+			textSubMessage(expandInlineLinks(text, links)),
+			...(options.footer ? [textSubMessage(options.footer)] : [])
+		],
+		quoted,
+		options
+	)
 
-\tconst sendLinkV2 = async (
-\t\tjid: string,
-\t\ttext: string,
-\t\tlinks: Array<{ url: string; displayName?: string; sourceDisplayName?: string; sourceSubtitle?: string }>,
-\t\tquoted?: WAMessage,
-\t\toptions: RichMessageOptions = {}
-\t) => sendLink(jid, text, links.map(item => item.url), quoted, options)
+	const sendLinkV2 = async (
+		jid: string,
+		text: string,
+		links: Array<{ url: string; displayName?: string; sourceDisplayName?: string; sourceSubtitle?: string }>,
+		quoted?: WAMessage,
+		options: RichMessageOptions = {}
+	) => sendLink(jid, text, links.map(item => item.url), quoted, options)
 
 	return {
 		...sock,
