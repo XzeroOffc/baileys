@@ -591,6 +591,39 @@ export const generateWAMessageContent = async (
 			expectedImageCount: message.album.expectedImageCount,
 			expectedVideoCount: message.album.expectedVideoCount
 		}
+	} else if (hasNonNullishProperty(message, 'interactiveMessage')) {
+		const interactive = message.interactiveMessage
+
+		if (!Array.isArray(interactive.buttons) || interactive.buttons.length === 0) {
+			throw new Boom('interactiveMessage.buttons must contain at least one single_select button', { statusCode: 400 })
+		}
+
+		for (const button of interactive.buttons) {
+			if (button.name !== 'single_select') {
+				throw new Boom(`Unsupported interactive button: ${button.name}. Only single_select is supported`, { statusCode: 400 })
+			}
+			try { JSON.parse(button.buttonParamsJson) } catch {
+				throw new Boom('single_select.buttonParamsJson must be valid JSON', { statusCode: 400 })
+			}
+		}
+
+		m.interactiveMessage = proto.Message.InteractiveMessage.create({
+			header: proto.Message.InteractiveMessage.Header.create({
+				title: interactive.header || interactive.title || '',
+				hasMediaAttachment: false
+			}),
+			body: proto.Message.InteractiveMessage.Body.create({
+				text: interactive.body || interactive.title || ''
+			}),
+			footer: proto.Message.InteractiveMessage.Footer.create({ text: interactive.footer || '' }),
+			nativeFlowMessage: proto.Message.InteractiveMessage.NativeFlowMessage.create({
+				buttons: interactive.buttons.map(button => ({
+					name: button.name,
+					buttonParamsJson: button.buttonParamsJson
+				})),
+				messageVersion: 1
+			})
+		})
 	} else if (hasNonNullishProperty(message, 'sharePhoneNumber')) {
 		m.protocolMessage = {
 			type: proto.Message.ProtocolMessage.Type.SHARE_PHONE_NUMBER
@@ -876,7 +909,7 @@ export const getDevice = (id: string) =>
 					? 'desktop'
 					: 'unknown'
 
-/** Upserts a receipt in the message */
+/** Upserts a receipt in a message */
 export const updateMessageWithReceipt = (msg: Pick<WAMessage, 'userReceipt'>, receipt: MessageUserReceipt) => {
 	msg.userReceipt = msg.userReceipt || []
 	const recp = msg.userReceipt.find(m => m.userJid === receipt.userJid)
